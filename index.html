@@ -6,76 +6,101 @@
   <!-- Подключаем Telegram Web App API -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
+    /* Основные стили страницы */
     body {
-      font-family: Arial, sans-serif;
+      background-color: #111;
+      color: #eee;
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
       margin: 0;
       padding: 20px;
-      background-color: #f9f9f9;
     }
+    /* Основной контейнер приложения */
     .container {
       max-width: 500px;
       margin: 0 auto;
-      background: #fff;
+      background: #222;
       padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+      display: flex;
+      flex-direction: column;
+      height: 80vh;
     }
     h1 {
       text-align: center;
-      color: #333;
+      margin: 0 0 20px;
+      font-weight: normal;
+      color: #fff;
     }
-    input[type="text"] {
-      width: 100%;
-      padding: 10px;
-      font-size: 16px;
-      box-sizing: border-box;
-      margin-bottom: 10px;
-    }
-    button {
-      width: 100%;
-      padding: 10px;
-      font-size: 16px;
-      background-color: #0088cc;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    ul {
+    /* Список задач занимает доступное пространство и прокручивается при переполнении */
+    #taskList {
       list-style: none;
       padding: 0;
-      margin-top: 20px;
+      margin: 0;
+      overflow-y: auto;
+      flex: 1;
     }
-    li {
+    #taskList li {
       display: flex;
       align-items: center;
-      padding: 8px;
-      border-bottom: 1px solid #ddd;
+      padding: 10px;
+      border-bottom: 1px solid #333;
     }
-    li:last-child {
+    #taskList li:last-child {
       border-bottom: none;
     }
-    li span {
-      flex: 1;
+    #taskList li span {
       margin-left: 10px;
+      flex: 1;
+    }
+    /* Область ввода располагается снизу */
+    .input-area {
+      margin-top: 20px;
+      display: flex;
+    }
+    .input-area input[type="text"] {
+      flex: 1;
+      padding: 10px;
+      font-size: 16px;
+      background-color: #333;
+      border: 1px solid #444;
+      border-radius: 4px;
+      color: #eee;
+    }
+    .input-area button {
+      padding: 10px 20px;
+      margin-left: 10px;
+      font-size: 16px;
+      background-color: #555;
+      border: none;
+      border-radius: 4px;
+      color: #eee;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+    .input-area button:hover {
+      background-color: #666;
     }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>To-Do List</h1>
-    <input type="text" id="taskInput" placeholder="Введите задачу">
-    <button id="addTaskBtn">Добавить задачу</button>
+    <!-- Список задач -->
     <ul id="taskList"></ul>
+    <!-- Область ввода -->
+    <div class="input-area">
+      <input type="text" id="taskInput" placeholder="Введите задачу">
+      <button id="addTaskBtn">Добавить задачу</button>
+    </div>
   </div>
   
   <script>
-    // Элементы интерфейса
     var taskInput = document.getElementById('taskInput');
     var addTaskBtn = document.getElementById('addTaskBtn');
     var taskList = document.getElementById('taskList');
 
-    // Функция для обновления данных в localStorage
+    // Функция для сохранения задач в localStorage
     function updateLocalStorage() {
       var tasks = [];
       var spans = taskList.querySelectorAll('li span');
@@ -85,71 +110,69 @@
       localStorage.setItem('tasks', JSON.stringify(tasks));
     }
 
-    // Функция для добавления задачи
-    // Второй параметр save (если не передан, считается true)
+    // Функция для добавления задачи. Если save не передан, считается true.
     function addTask(taskText, save) {
       if (typeof save === 'undefined') {
         save = true;
       }
-      if (!taskText || !taskText.trim()) return; // не добавляем пустую задачу
+      if (!taskText || !taskText.trim()) return;
 
-      // Создаём новый элемент списка
       var li = document.createElement('li');
 
-      // Создаём checkbox
       var checkbox = document.createElement('input');
       checkbox.type = 'checkbox';
       checkbox.addEventListener('change', function() {
         if (checkbox.checked) {
-          // При установке галочки удаляем задачу из списка
           taskList.removeChild(li);
           updateLocalStorage();
         }
       });
 
-      // Текст задачи
       var span = document.createElement('span');
       span.textContent = taskText;
 
-      // Собираем элемент задачи
       li.appendChild(checkbox);
       li.appendChild(span);
-      taskList.appendChild(li);
-
+      
+      // Новая задача добавляется в начало списка
+      if (taskList.firstChild) {
+        taskList.insertBefore(li, taskList.firstChild);
+      } else {
+        taskList.appendChild(li);
+      }
+      
       if (save) {
         updateLocalStorage();
       }
-      // Очищаем поле ввода
       taskInput.value = '';
     }
 
-    // Загрузка задач из localStorage при старте приложения
+    // Загрузка сохранённых задач из localStorage
     function loadTasks() {
       var tasksJson = localStorage.getItem('tasks');
       if (tasksJson) {
         var tasksArray = JSON.parse(tasksJson);
-        for (var i = 0; i < tasksArray.length; i++) {
+        // Чтобы порядок отображения соответствовал добавлению сверху,
+        // проходим по массиву в обратном порядке.
+        for (var i = tasksArray.length - 1; i >= 0; i--) {
           addTask(tasksArray[i], false);
         }
       }
     }
 
-    // Обработчик нажатия на кнопку "Добавить задачу"
     addTaskBtn.addEventListener('click', function() {
       addTask(taskInput.value);
     });
 
-    // Добавляем задачу по нажатию Enter
     taskInput.addEventListener('keypress', function(event) {
       if (event.key === 'Enter') {
         addTask(taskInput.value);
       }
     });
 
-    // Загружаем сохранённые задачи
     loadTasks();
 
-    // Инициализация Telegram Web App (проверяем, что объект Telegram существует)
+    // Инициализация Telegram Web App, если объект существует
     if (typeof Telegram !== 'undefined' && Telegram.WebApp) {
       Telegram.WebApp.ready();
     }
