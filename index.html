@@ -1,22 +1,153 @@
-<!doctype html>
-<html lang="ru">
-  <head>
-    <!-- Required meta tags -->
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Telegram To-Do List Mini App</title>
+  <!-- Подключаем Telegram Web App API -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f9f9f9;
+    }
+    .container {
+      max-width: 500px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+      box-sizing: border-box;
+      margin-bottom: 10px;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+      background-color: #0088cc;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+      margin-top: 20px;
+    }
+    li {
+      display: flex;
+      align-items: center;
+      padding: 8px;
+      border-bottom: 1px solid #ddd;
+    }
+    li:last-child {
+      border-bottom: none;
+    }
+    li span {
+      flex: 1;
+      margin-left: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>To-Do List</h1>
+    <input type="text" id="taskInput" placeholder="Введите задачу">
+    <button id="addTaskBtn">Добавить задачу</button>
+    <ul id="taskList"></ul>
+  </div>
+  
+  <script>
+    // Элементы интерфейса
+    const taskInput = document.getElementById('taskInput');
+    const addTaskBtn = document.getElementById('addTaskBtn');
+    const taskList = document.getElementById('taskList');
 
-    <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
+    // Функция для обновления данных в localStorage
+    function updateLocalStorage() {
+      const tasks = [];
+      taskList.querySelectorAll('li span').forEach(span => {
+        tasks.push(span.textContent);
+      });
+      localStorage.setItem('tasks', JSON.stringify(tasks));
+    }
 
-    <title>Hello, world!</title>
-  </head>
-  <body>
-    <h1>Hello, world!</h1>
+    // Функция для добавления задачи
+    // Параметр save определяет, нужно ли обновлять localStorage (по умолчанию true)
+    function addTask(taskText, save = true) {
+      if (!taskText.trim()) return; // не добавляем пустую задачу
 
-    <!-- Optional JavaScript -->
-    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js" integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut" crossorigin="anonymous"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js" integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k" crossorigin="anonymous"></script>
-  </body>
+      // Создаём новый элемент списка
+      const li = document.createElement('li');
+
+      // Создаём checkbox
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.addEventListener('change', () => {
+        if (checkbox.checked) {
+          // При установке галочки удаляем задачу из списка
+          taskList.removeChild(li);
+          updateLocalStorage();
+        }
+      });
+
+      // Текст задачи
+      const span = document.createElement('span');
+      span.textContent = taskText;
+
+      // Собираем элемент задачи
+      li.appendChild(checkbox);
+      li.appendChild(span);
+      taskList.appendChild(li);
+
+      if (save) {
+        updateLocalStorage();
+      }
+      // Очищаем поле ввода
+      taskInput.value = '';
+    }
+
+    // Загрузка задач из localStorage при старте приложения
+    function loadTasks() {
+      const tasksJson = localStorage.getItem('tasks');
+      if (tasksJson) {
+        const tasksArray = JSON.parse(tasksJson);
+        tasksArray.forEach(task => {
+          // Второй параметр false — чтобы не обновлять localStorage повторно
+          addTask(task, false);
+        });
+      }
+    }
+
+    // Обработчик нажатия на кнопку "Добавить задачу"
+    addTaskBtn.addEventListener('click', () => {
+      addTask(taskInput.value);
+    });
+
+    // Добавляем задачу по нажатию Enter
+    taskInput.addEventListener('keypress', (event) => {
+      if (event.key === 'Enter') {
+        addTask(taskInput.value);
+      }
+    });
+
+    // Загружаем сохранённые задачи
+    loadTasks();
+
+    // Инициализация Telegram Web App
+    Telegram.WebApp.ready();
+  </script>
+</body>
 </html>
