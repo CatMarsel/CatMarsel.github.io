@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <!-- Обеспечивает корректное масштабирование на мобильных устройствах -->
+  <!-- Обеспечивает корректное масштабирование на мобильных устройствах и запрещает масштабирование -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>Telegram To-Do List Mini App</title>
   <!-- Подключаем Telegram Web App API -->
@@ -19,19 +19,22 @@
     }
     */
     
-    /* Отключаем прокрутку для всей страницы */
+    /* Отключаем прокрутку всей страницы */
     html, body {
       overflow: hidden;
       height: 100%;
       margin: 0;
       padding: 0;
       background-color: #111;
+      color: #eee;
+      font-family: 'Grotesco', sans-serif;
     }
     
-    /* Основной фиксированный контейнер, чтобы верх оставался на виду */
+    /* Фиксированный контейнер приложения.
+       Верхняя позиция по умолчанию – 20px, но она будет обновлена через JS с учётом safeAreaInsets */
     .container {
       position: fixed;
-      top: 20px;
+      top: 20px; /* Значение обновится JS-ом */
       left: 50%;
       transform: translateX(-50%);
       width: 100%;
@@ -43,14 +46,15 @@
       box-shadow: 0 4px 8px rgba(0,0,0,0.5);
       display: flex;
       flex-direction: column;
+      /* Явно задаём цвет текста */
+      color: #eee;
     }
     
     h1 {
       text-align: center;
       margin: 0 0 20px;
       font-weight: normal;
-      color: #fff;
-      /* Чтобы заголовок всегда был виден */
+      color: #eee;
       flex-shrink: 0;
     }
     
@@ -79,7 +83,7 @@
       flex: 1;
     }
     
-    /* Область ввода – фиксирована в нижней части контейнера */
+    /* Область ввода – увеличена для удобства */
     .input-area {
       margin-top: 20px;
       display: flex;
@@ -88,8 +92,8 @@
     
     .input-area input[type="text"] {
       flex: 1;
-      padding: 10px;
-      font-size: 16px;
+      padding: 12px;
+      font-size: 18px;
       background-color: #333;
       border: 1px solid #444;
       border-radius: 25px;
@@ -97,11 +101,11 @@
       outline: none;
     }
     
-    /* Кнопка с изменённым текстом (значок "+") и округлёнными углами */
+    /* Кнопка стала больше и вместо текста теперь значок "＋" */
     .input-area button {
-      padding: 10px 20px;
+      padding: 12px 24px;
       margin-left: 10px;
-      font-size: 18px;
+      font-size: 20px;
       background-color: #555;
       border: none;
       border-radius: 25px;
@@ -117,7 +121,7 @@
       background-color: #666;
     }
     
-    /* Стилизация чекбокса */
+    /* Стилизация чекбокса: увеличенный, с серой окраской */
     input[type="checkbox"] {
       -webkit-appearance: none;
       appearance: none;
@@ -145,12 +149,11 @@
       left: 6px;
     }
     
-    /* Медиа-запросы для оптимизации под разные экраны */
+    /* Медиа-запросы для устройств с маленькими экранами */
     @media (max-width: 600px) {
       .container {
-        top: 10px;
-        bottom: 10px;
         padding: 15px;
+        bottom: 10px;
       }
       h1 {
         font-size: 24px;
@@ -158,8 +161,8 @@
       }
       .input-area input[type="text"],
       .input-area button {
-        font-size: 16px;
-        padding: 8px;
+        font-size: 18px;
+        padding: 10px;
       }
       input[type="checkbox"] {
         width: 28px;
@@ -173,15 +176,16 @@
     
     @media (min-width: 601px) and (max-width: 1024px) {
       .container {
-        top: 15px;
-        bottom: 15px;
+        padding: 20px;
+        bottom: 20px;
       }
       h1 {
         font-size: 26px;
       }
       .input-area input[type="text"],
       .input-area button {
-        font-size: 15px;
+        font-size: 20px;
+        padding: 12px;
       }
     }
   </style>
@@ -194,17 +198,29 @@
     <!-- Область ввода -->
     <div class="input-area">
       <input type="text" id="taskInput" placeholder="Введите задачу">
-      <!-- Кнопка теперь с текстом + -->
+      <!-- Текст кнопки заменён на значок "+" -->
       <button id="addTaskBtn">+</button>
     </div>
   </div>
   
   <script>
+    // Функция обновления верхнего отступа контейнера с учётом safe area Telegram
+    function updateContainerTop() {
+      if (window.Telegram && Telegram.WebApp && Telegram.WebApp.safeAreaInsets) {
+        var safeTop = Telegram.WebApp.safeAreaInsets.top; // значение в пикселях
+        document.querySelector('.container').style.top = (safeTop + 20) + 'px';
+      }
+    }
+    // Обновляем отступ при загрузке и изменении размеров окна
+    window.addEventListener('load', updateContainerTop);
+    window.addEventListener('resize', updateContainerTop);
+    
+    // Работа с to-do списком
     var taskInput = document.getElementById('taskInput');
     var addTaskBtn = document.getElementById('addTaskBtn');
     var taskList = document.getElementById('taskList');
     
-    // Функция для сохранения задач в localStorage
+    // Сохраняем задачи в localStorage
     function updateLocalStorage() {
       var tasks = [];
       var spans = taskList.querySelectorAll('li span');
@@ -214,7 +230,7 @@
       localStorage.setItem('tasks', JSON.stringify(tasks));
     }
     
-    // Функция для добавления задачи. Если параметр save не передан, считается true.
+    // Функция добавления задачи
     function addTask(taskText, save) {
       if (typeof save === 'undefined') {
         save = true;
@@ -251,12 +267,11 @@
       taskInput.value = '';
     }
     
-    // Загрузка сохранённых задач из localStorage
+    // Загрузка сохранённых задач
     function loadTasks() {
       var tasksJson = localStorage.getItem('tasks');
       if (tasksJson) {
         var tasksArray = JSON.parse(tasksJson);
-        // Добавляем задачи так, чтобы порядок соответствовал добавлению сверху
         for (var i = tasksArray.length - 1; i >= 0; i--) {
           addTask(tasksArray[i], false);
         }
@@ -275,7 +290,7 @@
     
     loadTasks();
     
-    if (typeof Telegram !== 'undefined' && Telegram.WebApp) {
+    if (window.Telegram && Telegram.WebApp) {
       Telegram.WebApp.ready();
     }
   </script>
