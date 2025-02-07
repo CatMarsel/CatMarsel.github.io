@@ -2,8 +2,8 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <!-- Обеспечивает масштабирование для мобильных устройств -->
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Обеспечивает корректное масштабирование на мобильных устройствах -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>Telegram To-Do List Mini App</title>
   <!-- Подключаем Telegram Web App API -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -19,26 +19,30 @@
     }
     */
     
-    /* Основные стили страницы */
-    body {
-      background-color: #111;
-      color: #eee;
-      font-family: 'Grotesco', sans-serif;
+    /* Отключаем прокрутку для всей страницы */
+    html, body {
+      overflow: hidden;
+      height: 100%;
       margin: 0;
-      padding: 20px;
+      padding: 0;
+      background-color: #111;
     }
     
+    /* Основной фиксированный контейнер, чтобы верх оставался на виду */
     .container {
-      max-width: 500px;
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
       width: 100%;
-      margin: 0 auto;
+      max-width: 500px;
+      bottom: 20px;
       background: #222;
       padding: 20px;
       border-radius: 10px;
       box-shadow: 0 4px 8px rgba(0,0,0,0.5);
       display: flex;
       flex-direction: column;
-      height: 80vh;
     }
     
     h1 {
@@ -46,8 +50,11 @@
       margin: 0 0 20px;
       font-weight: normal;
       color: #fff;
+      /* Чтобы заголовок всегда был виден */
+      flex-shrink: 0;
     }
     
+    /* Список задач с внутренней прокруткой */
     #taskList {
       list-style: none;
       padding: 0;
@@ -72,9 +79,11 @@
       flex: 1;
     }
     
+    /* Область ввода – фиксирована в нижней части контейнера */
     .input-area {
       margin-top: 20px;
       display: flex;
+      flex-shrink: 0;
     }
     
     .input-area input[type="text"] {
@@ -88,16 +97,20 @@
       outline: none;
     }
     
+    /* Кнопка с изменённым текстом (значок "+") и округлёнными углами */
     .input-area button {
       padding: 10px 20px;
       margin-left: 10px;
-      font-size: 16px;
+      font-size: 18px;
       background-color: #555;
       border: none;
       border-radius: 25px;
       color: #eee;
       cursor: pointer;
       transition: background-color 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     
     .input-area button:hover {
@@ -132,13 +145,11 @@
       left: 6px;
     }
     
-    /* Медиа-запросы для оптимизации под разные размеры экранов */
+    /* Медиа-запросы для оптимизации под разные экраны */
     @media (max-width: 600px) {
-      body {
-        padding: 10px;
-      }
       .container {
-        height: 90vh;
+        top: 10px;
+        bottom: 10px;
         padding: 15px;
       }
       h1 {
@@ -147,10 +158,9 @@
       }
       .input-area input[type="text"],
       .input-area button {
-        font-size: 14px;
+        font-size: 16px;
         padding: 8px;
       }
-      /* Увеличиваем чекбокс для удобства на маленьких экранах */
       input[type="checkbox"] {
         width: 28px;
         height: 28px;
@@ -163,7 +173,8 @@
     
     @media (min-width: 601px) and (max-width: 1024px) {
       .container {
-        height: 85vh;
+        top: 15px;
+        bottom: 15px;
       }
       h1 {
         font-size: 26px;
@@ -183,7 +194,8 @@
     <!-- Область ввода -->
     <div class="input-area">
       <input type="text" id="taskInput" placeholder="Введите задачу">
-      <button id="addTaskBtn">Добавить задачу</button>
+      <!-- Кнопка теперь с текстом + -->
+      <button id="addTaskBtn">+</button>
     </div>
   </div>
   
@@ -244,7 +256,7 @@
       var tasksJson = localStorage.getItem('tasks');
       if (tasksJson) {
         var tasksArray = JSON.parse(tasksJson);
-        // Добавляем задачи так, чтобы порядок отображения соответствовал добавлению сверху
+        // Добавляем задачи так, чтобы порядок соответствовал добавлению сверху
         for (var i = tasksArray.length - 1; i >= 0; i--) {
           addTask(tasksArray[i], false);
         }
