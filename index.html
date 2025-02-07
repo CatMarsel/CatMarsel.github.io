@@ -2,12 +2,14 @@
 <html>
 <head>
   <meta charset="UTF-8">
+  <!-- Обеспечивает масштабирование для мобильных устройств -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Telegram To-Do List Mini App</title>
   <!-- Подключаем Telegram Web App API -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     /* Если у вас есть файлы шрифта Grotesco, подключите их через @font-face */
-    /* 
+    /*
     @font-face {
       font-family: 'Grotesco';
       src: url('fonts/Grotesco-Regular.woff2') format('woff2'),
@@ -17,7 +19,7 @@
     }
     */
     
-    /* Основные стили страницы с шрифтом Grotesco */
+    /* Основные стили страницы */
     body {
       background-color: #111;
       color: #eee;
@@ -25,8 +27,10 @@
       margin: 0;
       padding: 20px;
     }
+    
     .container {
       max-width: 500px;
+      width: 100%;
       margin: 0 auto;
       background: #222;
       padding: 20px;
@@ -36,12 +40,14 @@
       flex-direction: column;
       height: 80vh;
     }
+    
     h1 {
       text-align: center;
       margin: 0 0 20px;
       font-weight: normal;
       color: #fff;
     }
+    
     #taskList {
       list-style: none;
       padding: 0;
@@ -49,23 +55,28 @@
       overflow-y: auto;
       flex: 1;
     }
+    
     #taskList li {
       display: flex;
       align-items: center;
       padding: 10px;
       border-bottom: 1px solid #333;
     }
+    
     #taskList li:last-child {
       border-bottom: none;
     }
+    
     #taskList li span {
       margin-left: 10px;
       flex: 1;
     }
+    
     .input-area {
       margin-top: 20px;
       display: flex;
     }
+    
     .input-area input[type="text"] {
       flex: 1;
       padding: 10px;
@@ -76,6 +87,7 @@
       color: #eee;
       outline: none;
     }
+    
     .input-area button {
       padding: 10px 20px;
       margin-left: 10px;
@@ -87,9 +99,11 @@
       cursor: pointer;
       transition: background-color 0.2s ease;
     }
+    
     .input-area button:hover {
       background-color: #666;
     }
+    
     /* Стилизация чекбокса */
     input[type="checkbox"] {
       -webkit-appearance: none;
@@ -103,10 +117,12 @@
       position: relative;
       margin: 0;
     }
+    
     input[type="checkbox"]:checked {
       background-color: #888;
       border-color: #aaa;
     }
+    
     input[type="checkbox"]:checked::after {
       content: '✓';
       font-size: 16px;
@@ -114,6 +130,48 @@
       position: absolute;
       top: 0;
       left: 6px;
+    }
+    
+    /* Медиа-запросы для оптимизации под разные размеры экранов */
+    @media (max-width: 600px) {
+      body {
+        padding: 10px;
+      }
+      .container {
+        height: 90vh;
+        padding: 15px;
+      }
+      h1 {
+        font-size: 24px;
+        margin-bottom: 15px;
+      }
+      .input-area input[type="text"],
+      .input-area button {
+        font-size: 14px;
+        padding: 8px;
+      }
+      /* Увеличиваем чекбокс для удобства на маленьких экранах */
+      input[type="checkbox"] {
+        width: 28px;
+        height: 28px;
+      }
+      input[type="checkbox"]:checked::after {
+        font-size: 18px;
+        left: 8px;
+      }
+    }
+    
+    @media (min-width: 601px) and (max-width: 1024px) {
+      .container {
+        height: 85vh;
+      }
+      h1 {
+        font-size: 26px;
+      }
+      .input-area input[type="text"],
+      .input-area button {
+        font-size: 15px;
+      }
     }
   </style>
 </head>
@@ -133,7 +191,7 @@
     var taskInput = document.getElementById('taskInput');
     var addTaskBtn = document.getElementById('addTaskBtn');
     var taskList = document.getElementById('taskList');
-
+    
     // Функция для сохранения задач в localStorage
     function updateLocalStorage() {
       var tasks = [];
@@ -143,16 +201,16 @@
       }
       localStorage.setItem('tasks', JSON.stringify(tasks));
     }
-
+    
     // Функция для добавления задачи. Если параметр save не передан, считается true.
     function addTask(taskText, save) {
       if (typeof save === 'undefined') {
         save = true;
       }
       if (!taskText || !taskText.trim()) return;
-
+      
       var li = document.createElement('li');
-
+      
       var checkbox = document.createElement('input');
       checkbox.type = 'checkbox';
       checkbox.addEventListener('change', function() {
@@ -161,13 +219,13 @@
           updateLocalStorage();
         }
       });
-
+      
       var span = document.createElement('span');
       span.textContent = taskText;
-
+      
       li.appendChild(checkbox);
       li.appendChild(span);
-
+      
       // Новая задача добавляется в начало списка
       if (taskList.firstChild) {
         taskList.insertBefore(li, taskList.firstChild);
@@ -180,7 +238,7 @@
       }
       taskInput.value = '';
     }
-
+    
     // Загрузка сохранённых задач из localStorage
     function loadTasks() {
       var tasksJson = localStorage.getItem('tasks');
@@ -192,19 +250,19 @@
         }
       }
     }
-
+    
     addTaskBtn.addEventListener('click', function() {
       addTask(taskInput.value);
     });
-
+    
     taskInput.addEventListener('keypress', function(event) {
       if (event.key === 'Enter') {
         addTask(taskInput.value);
       }
     });
-
+    
     loadTasks();
-
+    
     if (typeof Telegram !== 'undefined' && Telegram.WebApp) {
       Telegram.WebApp.ready();
     }
