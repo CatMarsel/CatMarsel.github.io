@@ -71,31 +71,35 @@
   
   <script>
     // Элементы интерфейса
-    const taskInput = document.getElementById('taskInput');
-    const addTaskBtn = document.getElementById('addTaskBtn');
-    const taskList = document.getElementById('taskList');
+    var taskInput = document.getElementById('taskInput');
+    var addTaskBtn = document.getElementById('addTaskBtn');
+    var taskList = document.getElementById('taskList');
 
     // Функция для обновления данных в localStorage
     function updateLocalStorage() {
-      const tasks = [];
-      taskList.querySelectorAll('li span').forEach(span => {
-        tasks.push(span.textContent);
-      });
+      var tasks = [];
+      var spans = taskList.querySelectorAll('li span');
+      for (var i = 0; i < spans.length; i++) {
+        tasks.push(spans[i].textContent);
+      }
       localStorage.setItem('tasks', JSON.stringify(tasks));
     }
 
     // Функция для добавления задачи
-    // Параметр save определяет, нужно ли обновлять localStorage (по умолчанию true)
-    function addTask(taskText, save = true) {
-      if (!taskText.trim()) return; // не добавляем пустую задачу
+    // Второй параметр save (если не передан, считается true)
+    function addTask(taskText, save) {
+      if (typeof save === 'undefined') {
+        save = true;
+      }
+      if (!taskText || !taskText.trim()) return; // не добавляем пустую задачу
 
       // Создаём новый элемент списка
-      const li = document.createElement('li');
+      var li = document.createElement('li');
 
       // Создаём checkbox
-      const checkbox = document.createElement('input');
+      var checkbox = document.createElement('input');
       checkbox.type = 'checkbox';
-      checkbox.addEventListener('change', () => {
+      checkbox.addEventListener('change', function() {
         if (checkbox.checked) {
           // При установке галочки удаляем задачу из списка
           taskList.removeChild(li);
@@ -104,7 +108,7 @@
       });
 
       // Текст задачи
-      const span = document.createElement('span');
+      var span = document.createElement('span');
       span.textContent = taskText;
 
       // Собираем элемент задачи
@@ -121,23 +125,22 @@
 
     // Загрузка задач из localStorage при старте приложения
     function loadTasks() {
-      const tasksJson = localStorage.getItem('tasks');
+      var tasksJson = localStorage.getItem('tasks');
       if (tasksJson) {
-        const tasksArray = JSON.parse(tasksJson);
-        tasksArray.forEach(task => {
-          // Второй параметр false — чтобы не обновлять localStorage повторно
-          addTask(task, false);
-        });
+        var tasksArray = JSON.parse(tasksJson);
+        for (var i = 0; i < tasksArray.length; i++) {
+          addTask(tasksArray[i], false);
+        }
       }
     }
 
     // Обработчик нажатия на кнопку "Добавить задачу"
-    addTaskBtn.addEventListener('click', () => {
+    addTaskBtn.addEventListener('click', function() {
       addTask(taskInput.value);
     });
 
     // Добавляем задачу по нажатию Enter
-    taskInput.addEventListener('keypress', (event) => {
+    taskInput.addEventListener('keypress', function(event) {
       if (event.key === 'Enter') {
         addTask(taskInput.value);
       }
@@ -146,8 +149,10 @@
     // Загружаем сохранённые задачи
     loadTasks();
 
-    // Инициализация Telegram Web App
-    Telegram.WebApp.ready();
+    // Инициализация Telegram Web App (проверяем, что объект Telegram существует)
+    if (typeof Telegram !== 'undefined' && Telegram.WebApp) {
+      Telegram.WebApp.ready();
+    }
   </script>
 </body>
 </html>
